@@ -1,7 +1,20 @@
-# Sample Hardhat 3 Beta Project (minimal)
+# OSS-fuzz libpng project
 
-This project has a minimal setup of Hardhat 3 Beta, without any plugins.
+## Project Description
+This is an attempt at solving the ELCA EDI Challenge. This application mints badges on the Polygon Amoy testnet. Please note that I was unable to fully test the whole pipeline as I was unable to get access to testnet tokens. Therefore I was not able to complete the challenge and send my nft badge to the examiner's wallet.
+## Project structure
 
-## What's included?
+## Setup
 
-The project includes native support for TypeScript, Hardhat scripts, tasks, and support for Solidity compilation and tests.
+### Clone Repository
+
+#### Via HTTPS:
+```bash
+git clone https://github.com/johannayara/elca_challenge.git
+```
+
+#### Via SSH:
+```bash
+git clone git@github.com:johannayara/elca_challenge.git
+```
+---
