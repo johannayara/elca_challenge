@@ -5,7 +5,7 @@ async function main() {
   console.log("Deploying with:", deployer.address);
 
   const Badge = await ethers.getContractFactory("Badge");
-  const badge = await Badge.deploy(deployer.address); // initial_owner = you
+  const badge = await Badge.deploy(deployer.address);
   await badge.waitForDeployment();
 
   console.log("Contract deployed to:", await badge.getAddress());

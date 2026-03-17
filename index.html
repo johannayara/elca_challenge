@@ -65,7 +65,7 @@
       z-index: 1;
     }
 
-    /* ── HEADER ── */
+    /*HEADER*/
     header {
       position: relative;
       z-index: 10;
@@ -247,7 +247,7 @@
       font-weight: 400;
       padding: 8px 4px;
       outline: none;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.2s, 0.2s;
       border-radius: 0;
     }
 
@@ -355,7 +355,7 @@
       color: var(--cyan);
     }
 
-    /* ── RIGHT PANEL (PREVIEW) ── */
+    /* RIGHT PANEL (PREVIEW) */
     .preview-panel {
       display: flex;
       align-items: center;
@@ -366,7 +366,7 @@
         radial-gradient(ellipse at 20% 80%, rgba(180, 79, 255, 0.05) 0%, transparent 50%);
     }
 
-    /* ── BADGE CARD ── */
+    /* BADGE CARD */
     .badge-card {
       width: 340px;
       background: var(--card-bg);
@@ -513,8 +513,6 @@
       gap: 10px 20px;
       margin-bottom: 14px;
     }
-
-    .badge-field-group {}
 
     .badge-field-label {
       font-family: 'Share Tech Mono', monospace;
@@ -780,7 +778,7 @@
   </main>
 
   <script>
-    // ── Live preview update ──
+    // Updates preview whilst user is modifying fields
     function updatePreview() {
       const first = document.getElementById('firstName').value;
       const last = document.getElementById('lastName').value;
@@ -810,7 +808,7 @@
       }
     }
 
-    // ── Status helper ──
+    // Status setter
     function setStatus(msg, type = 'success') {
       const bar = document.getElementById('statusBar');
       const text = document.getElementById('statusText');
@@ -818,7 +816,14 @@
       text.textContent = msg;
     }
 
-    // ── Mint function (stub — wire up ethers.js + your contract here) ──
+    // Update header with wallet info
+    async function updateHeader(provider, address) {
+      const balance = await provider.getBalance(address);
+      const formatted = parseFloat(ethers.formatEther(balance)).toFixed(4);
+      document.getElementById('walletDisplay').textContent = address.slice(0, 6) + '...' + address.slice(-4);
+      document.getElementById('polDisplay').textContent = `${formatted} POL`;
+    }
+    // Mint Badge function
     async function mintBadge() {
       const btn = document.getElementById('mintBtn');
 
@@ -827,7 +832,7 @@
       const last = document.getElementById('lastName').value.trim();
 
       if (!recipient || !first || !last) {
-        setStatus('⚠ Fill in at least: first name, last name, recipient wallet.', 'error');
+        setStatus('Fill in at least: first name, last name, recipient wallet.', 'error');
         return;
       }
 
@@ -836,42 +841,44 @@
       document.getElementById('footerStatus').textContent = 'MINTING';
 
       try {
-        // ── Connect MetaMask ──
-        if (!window.ethereum) throw new Error('MetaMask not detected.');
+        // Connect MetaMask
+        if (!window.ethereum) {
+          setStatus('MetaMask not detected. Please install it.', 'error');
+          return;
+        }
+
         await window.ethereum.request({ method: 'eth_requestAccounts' });
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-
-        // ── Check network (Polygon Amoy = chainId 80002) ──
+        const address = await signer.getAddress();
+        await updateHeader(provider, address);
+        // Check network
         const network = await provider.getNetwork();
-        if (network.chainId !== 80002n) {
-          setStatus('⚠ Switch MetaMask to Polygon Amoy Testnet (chainId 80002)', 'error');
+        if (network.chainId !== 80002n) {//n suffix cause it's a big int
+          setStatus('Switch MetaMask to Polygon Amoy Testnet (chainId 80002)', 'error');
           btn.disabled = false;
           return;
         }
 
         setStatus('Building metadata...', 'loading');
 
-        // Build metadata JSON (for demo we inline it; in prod upload to IPFS)
         const metadata = {
           name: `${first} ${last} — Exit Badge`,
-          description: `Badge for ${document.getElementById('visaType').value}`,
+          description: `Badge for ${document.getElementById('mainProject').value}`,
           image: document.getElementById('imageLink').value || '',
           attributes: [
             { trait_type: 'Main Project', value: document.getElementById('mainProject').value },
-            { trait_type: 'Start', value: document.getElementById('startDate').value },
-            { trait_type: 'Completion', value: document.getElementById('dateLeaving').value },
-            { trait_type: 'Main Details', value: document.getElementById('details').value },
+            { trait_type: 'Date of Arrival', value: document.getElementById('startDate').value },
+            { trait_type: 'Date of Leaving', value: document.getElementById('endDate').value },
+            { trait_type: 'Details', value: document.getElementById('details').value },
           ]
         };
 
         const metaURI = 'data:application/json;base64,' +
           btoa(unescape(encodeURIComponent(JSON.stringify(metadata))));
 
-        // ── Your deployed contract ──
-        // TODO: Replace with your real contract address after deploying
-        const CONTRACT_ADDRESS = '0xYOUR_CONTRACT_ADDRESS_HERE';
+        const CONTRACT_ADDRESS = '0x92abcF9EAef79436f03fD43d7Ca2950A448cdC73';
 
         const ABI = [
           'function mintBadge(address recipient, string memory tokenURI) public returns (uint256)'
@@ -897,17 +904,17 @@
 
       } catch (err) {
         console.error(err);
-        setStatus(`✖ ${err.message || 'Transaction failed'}`, 'error');
+        setStatus(`${err.code || 'Transaction failed'}`, 'error');
         document.getElementById('footerStatus').textContent = 'ERROR';
         btn.disabled = false;
       }
     }
 
-    // ── Init ──
+    // Call update preview
     updatePreview();
   </script>
 
-  <!-- Load ethers.js v6 from CDN -->
+  <!-- Load ethers.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 
 </body>
