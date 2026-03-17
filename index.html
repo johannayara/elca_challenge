@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exit Badge Protocol</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050d12;
+      --panel: #07141c;
+      --border: #0ff3;
+      --cyan: #00ffe7;
+      --green: #39ff14;
+      --purple: #b44fff;
+      --dim: #4a7a80;
+      --text: #c8f0f5;
+      --label: #4ecdc4;
+      --card-bg: #020c12;
+      --card-border: #00ffe755;
+      --red: #ff3860;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 231, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 231, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.15) 2px,
+          rgba(0, 0, 0, 0.15) 4px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(5, 13, 18, 0.9);
+      backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .logo-icon {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      position: relative;
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      background: var(--cyan);
+      border-radius: 50%;
+    }
+
+    @keyframes pulse-ring {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 231, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(0, 255, 231, 0);
+      }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: right;
+      padding-top: 10px;
+      gap: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    .net-btn {
+      padding: 4px 12px;
+      background: transparent;
+      border: none;
+      color: var(--dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+    }
+
+    .net-btn.active {
+      background: var(--cyan);
+      color: var(--bg);
+      font-weight: bold;
+    }
+
+    .chain-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    .chain-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .wallet-addr {
+      color: var(--cyan);
+      font-size: 0.72rem;
+    }
+
+    .pol-bal {
+      color: var(--text);
+      font-size: 0.72rem;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 55px);
+    }
+
+    /* ── LEFT PANEL (FORM) ── */
+    .form-panel {
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      background: rgba(7, 20, 28, 0.7);
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::before {
+      content: '◆';
+      font-size: 0.5rem;
+      color: var(--green);
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--label);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: none;
+      border-bottom: 1px solid var(--cyan);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      padding: 8px 4px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      border-radius: 0;
+    }
+
+    .field input:focus {
+      border-bottom-color: var(--green);
+      background: rgba(0, 255, 231, 0.04);
+    }
+
+    .field input::placeholder {
+      color: #2a5a60;
+    }
+
+    .field input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5) sepia(1) hue-rotate(150deg);
+      cursor: pointer;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Mint button */
+    .mint-btn {
+      margin-top: 28px;
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+
+    .mint-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--cyan);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    .mint-btn:hover {
+      color: var(--bg);
+      box-shadow: 0 0 20px var(--cyan);
+    }
+
+    .mint-btn:hover::before {
+      transform: translateX(0);
+    }
+
+    .mint-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .mint-btn:disabled:hover {
+      color: var(--cyan);
+      box-shadow: none;
+    }
+
+    .mint-btn:disabled:hover::before {
+      transform: translateX(-100%);
+    }
+
+    /* Status bar */
+    .status-bar {
+      margin-top: 14px;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 2px solid var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--green);
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .status-bar.visible {
+      opacity: 1;
+    }
+
+    .status-bar.error {
+      border-left-color: var(--red);
+      color: var(--red);
+    }
+
+    .status-bar.loading {
+      border-left-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* ── RIGHT PANEL (PREVIEW) ── */
+    .preview-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background:
+        radial-gradient(ellipse at 60% 40%, rgba(0, 255, 231, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 20% 80%, rgba(180, 79, 255, 0.05) 0%, transparent 50%);
+    }
+
+    /* ── BADGE CARD ── */
+    .badge-card {
+      width: 340px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      position: relative;
+      box-shadow:
+        0 0 40px rgba(0, 255, 231, 0.08),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      animation: card-float 4s ease-in-out infinite;
+    }
+
+    @keyframes card-float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    /* Corner brackets */
+    .badge-card::before,
+    .badge-card::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--cyan);
+      border-style: solid;
+      z-index: 2;
+    }
+
+    .badge-card::before {
+      top: 6px;
+      left: 6px;
+      border-width: 2px 0 0 2px;
+      box-shadow: -2px -2px 8px rgba(0, 255, 231, 0.3);
+    }
+
+    .badge-card::after {
+      bottom: 6px;
+      right: 6px;
+      border-width: 0 2px 2px 0;
+      box-shadow: 2px 2px 8px rgba(0, 255, 231, 0.3);
+    }
+
+    /* Top flow indicator */
+    .badge-flow {
+      padding: 14px 14px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+      border-bottom: 1px solid rgba(0, 255, 231, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-flow span {
+      color: var(--cyan);
+    }
+
+    .badge-chain-tag {
+      font-size: 0.55rem;
+      color: var(--purple);
+      border: 1px solid rgba(180, 79, 255, 0.3);
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+
+    /* Badge image */
+    .badge-image-wrap {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      overflow: hidden;
+    }
+
+    .badge-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.7) saturate(0.8);
+      transition: all 0.4s;
+    }
+
+    .badge-image-wrap:hover img {
+      filter: brightness(0.85) saturate(1);
+    }
+
+    .badge-image-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom,
+          transparent 40%,
+          rgba(2, 12, 18, 0.9) 100%);
+      pointer-events: none;
+    }
+
+    .badge-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0a1a24, #050d12);
+      gap: 10px;
+      color: var(--dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+    }
+
+    .badge-img-placeholder .img-icon {
+      font-size: 2.5rem;
+      opacity: 0.3;
+    }
+
+    /* Badge body */
+    .badge-body {
+      padding: 16px 18px 20px;
+    }
+
+    .badge-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 14px;
+      letter-spacing: 0.05em;
+      min-height: 1.5rem;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 20px;
+      margin-bottom: 14px;
+    }
+
+    .badge-field-group {}
+
+    .badge-field-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .badge-field-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      min-height: 1rem;
+    }
+
+    /* Badge footer */
+    .badge-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px;
+      border-top: 1px solid rgba(0, 255, 231, 0.1);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+    }
+
+    .badge-footer-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .badge-footer-label {
+      color: var(--dim);
+      font-size: 0.55rem;
+    }
+
+    .badge-footer-value {
+      color: var(--cyan);
+    }
+
+    .badge-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .status-dot.minted {
+      background: var(--purple);
+      box-shadow: 0 0 6px var(--purple);
+    }
+
+    /* Glow effect on card hover */
+    .badge-card:hover {
+      box-shadow:
+        0 0 60px rgba(0, 255, 231, 0.15),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--cyan);
+      border-radius: 2px;
+    }
+
+    /* Glitch animation for title on mint */
+    @keyframes glitch {
+      0% {
+        text-shadow: none;
+      }
+
+      20% {
+        text-shadow: 2px 0 var(--cyan), -2px 0 var(--purple);
+      }
+
+      40% {
+        text-shadow: -2px 0 var(--green), 2px 0 var(--cyan);
+      }
+
+      60% {
+        text-shadow: 2px 0 var(--purple), -2px 0 var(--green);
+      }
+
+      100% {
+        text-shadow: none;
+      }
+    }
+
+    .glitch {
+      animation: glitch 0.4s steps(1) 3;
+    }
+
+    /* Minted overlay */
+    .minted-stamp {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-15deg);
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--green);
+      border: 3px solid var(--green);
+      padding: 6px 16px;
+      letter-spacing: 0.2em;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 0 20px var(--green);
+      box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+      transition: opacity 0.5s;
+      z-index: 10;
+    }
+
+    .minted-stamp.show {
+      opacity: 0.85;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon"></div>
+      EXIT BADGE PROTOCOL
+    </div>
+    <div class="header-right">
+      <div class="chain-info">
+        <div class="chain-dot"></div>
+        <span>Polygon Amoy Testnet</span>
+      </div>
+      <span class="wallet-addr" id="walletDisplay">Not connected</span>
+      <span class="pol-bal" id="polDisplay">— POL</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- FORM PANEL -->
+    <div class="form-panel">
+      <div class="panel-title">Badge Metadata</div>
+
+
+      <div class="field">
+        <label>First Name</label>
+        <input type="text" id="firstName" placeholder="Jane" maxlength="256" oninput="updatePreview()" />
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <input type="text" id="lastName" placeholder="Doe" maxlength="256" oninput="updatePreview()" />
+      </div>
+
+      <div class="field">
+        <label>Main project</label>
+        <input type="text" id="mainProject" maxlength="256" placeholder="EDI Challenge" oninput="updatePreview()" />
+      </div>
+      <div class="field">
+        <label>Start Date</label>
+        <input type="date" id="startDate" oninput="updatePreview()" />
+      </div>
+      <div class="field">
+        <label>Completion Date</label>
+        <input type="date" id="endDate" oninput="updatePreview()" />
+      </div>
+
+      <div class="field">
+        <label>Details</label>
+        <input type="text" id="details" maxlength="256" placeholder="EDI Challenge Details" oninput="updatePreview()" />
+      </div>
+
+      <div class="field">
+        <label>Image Link</label>
+        <input type="url" id="imageLink" placeholder="https://..." oninput="updatePreview()" />
+      </div>
+
+      <div class="field">
+        <label>Recipient Wallet</label>
+        <input type="text" id="recipientWallet" maxlength="256" placeholder="0x0..." oninput="updatePreview()" />
+      </div>
+
+      <button class="mint-btn" id="mintBtn" onclick="mintBadge()">
+        ▶ &nbsp; MINT BADGE
+      </button>
+
+      <div class="status-bar" id="statusBar">
+        <span id="statusText"></span>
+      </div>
+    </div>
+
+    <!-- PREVIEW PANEL -->
+    <div class="preview-panel">
+      <div class="badge-card" id="badgeCard">
+        <div class="minted-stamp" id="mintedStamp">MINTED</div>
+
+        <div class="badge-flow">
+          <span class="badge-chain-tag">POLYGON AMOY</span>
+        </div>
+
+        <div class="badge-image-wrap">
+          <div class="badge-img-placeholder" id="imgPlaceholder">
+            <div class="img-icon">◈</div>
+            <span>AWAITING IMAGE</span>
+          </div>
+          <img id="badgeImg" src="" alt="Badge image" style="display:none;" />
+          <div class="badge-image-overlay"></div>
+        </div>
+
+        <div class="badge-body">
+          <div class="badge-name" id="prevName">—</div>
+
+          <div class="badge-grid">
+            <div class="badge-field-group">
+              <div class="badge-field-label">Main project</div>
+              <div class="badge-field-value" id="prevMainProject">—</div>
+            </div>
+            <div class="badge-field-group">
+              <div class="badge-field-label">start date</div>
+              <div class="badge-field-value" id="prevStartDate">—</div>
+            </div>
+            <div class="badge-field-group">
+              <div class="badge-field-label">completion date</div>
+              <div class="badge-field-value" id="prevEndDate">—</div>
+            </div>
+            <div class="badge-field-group">
+              <div class="badge-field-label">Details</div>
+              <div class="badge-field-value" id="prevDetails">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="badge-footer">
+          <div class="badge-footer-item">
+            <span class="badge-footer-label">Chain</span>
+            <span class="badge-footer-value">POLYGON AMOY TESTNET</span>
+          </div>
+          <div class="badge-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="badge-footer-value" id="footerStatus">READY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ── Live preview update ──
+    function updatePreview() {
+      const first = document.getElementById('firstName').value;
+      const last = document.getElementById('lastName').value;
+      const main = document.getElementById('mainProject').value;
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const details = document.getElementById('details').value;
+      const img = document.getElementById('imageLink').value;
+
+      document.getElementById('prevName').textContent =
+        (first || last) ? `${first} ${last}`.trim() : '—';
+      document.getElementById('prevMainProject').textContent = main || '—';
+      document.getElementById('prevStartDate').textContent = start || '—';
+      document.getElementById('prevEndDate').textContent = end || '—';
+      document.getElementById('prevDetails').textContent = details || '—';
+
+      // Image swap
+      const imgEl = document.getElementById('badgeImg');
+      const placeholder = document.getElementById('imgPlaceholder');
+      if (img) {
+        imgEl.src = img;
+        imgEl.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        imgEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+    }
+
+    // ── Status helper ──
+    function setStatus(msg, type = 'success') {
+      const bar = document.getElementById('statusBar');
+      const text = document.getElementById('statusText');
+      bar.className = `status-bar visible ${type}`;
+      text.textContent = msg;
+    }
+
+    // ── Mint function (stub — wire up ethers.js + your contract here) ──
+    async function mintBadge() {
+      const btn = document.getElementById('mintBtn');
+
+      const recipient = document.getElementById('recipientWallet').value.trim();
+      const first = document.getElementById('firstName').value.trim();
+      const last = document.getElementById('lastName').value.trim();
+
+      if (!recipient || !first || !last) {
+        setStatus('⚠ Fill in at least: first name, last name, recipient wallet.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus('Connecting to wallet...', 'loading');
+      document.getElementById('footerStatus').textContent = 'MINTING';
+
+      try {
+        // ── Connect MetaMask ──
+        if (!window.ethereum) throw new Error('MetaMask not detected.');
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+
+        // ── Check network (Polygon Amoy = chainId 80002) ──
+        const network = await provider.getNetwork();
+        if (network.chainId !== 80002n) {
+          setStatus('⚠ Switch MetaMask to Polygon Amoy Testnet (chainId 80002)', 'error');
+          btn.disabled = false;
+          return;
+        }
+
+        setStatus('Building metadata...', 'loading');
+
+        // Build metadata JSON (for demo we inline it; in prod upload to IPFS)
+        const metadata = {
+          name: `${first} ${last} — Exit Badge`,
+          description: `Badge for ${document.getElementById('visaType').value}`,
+          image: document.getElementById('imageLink').value || '',
+          attributes: [
+            { trait_type: 'Main Project', value: document.getElementById('mainProject').value },
+            { trait_type: 'Start', value: document.getElementById('startDate').value },
+            { trait_type: 'Completion', value: document.getElementById('dateLeaving').value },
+            { trait_type: 'Main Details', value: document.getElementById('details').value },
+          ]
+        };
+
+        const metaURI = 'data:application/json;base64,' +
+          btoa(unescape(encodeURIComponent(JSON.stringify(metadata))));
+
+        // ── Your deployed contract ──
+        // TODO: Replace with your real contract address after deploying
+        const CONTRACT_ADDRESS = '0xYOUR_CONTRACT_ADDRESS_HERE';
+
+        const ABI = [
+          'function mintBadge(address recipient, string memory tokenURI) public returns (uint256)'
+        ];
+
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+        setStatus('Sending transaction... (confirm in MetaMask)', 'loading');
+
+        const tx = await contract.mintBadge(recipient, metaURI);
+        setStatus(`Tx sent: ${tx.hash.slice(0, 18)}... waiting for confirmation`, 'loading');
+
+        const receipt = await tx.wait();
+        const tokenId = receipt.logs[0]?.topics?.[3]
+          ? parseInt(receipt.logs[0].topics[3], 16)
+          : '?';
+
+        setStatus(`✔ Minted! Token ID: ${tokenId} — Tx: ${tx.hash.slice(0, 14)}...`);
+        document.getElementById('mintedStamp').classList.add('show');
+        document.getElementById('footerStatus').textContent = 'MINTED';
+        document.getElementById('statusDot').classList.add('minted');
+        document.getElementById('badgeCard').querySelector('.badge-name').classList.add('glitch');
+
+      } catch (err) {
+        console.error(err);
+        setStatus(`✖ ${err.message || 'Transaction failed'}`, 'error');
+        document.getElementById('footerStatus').textContent = 'ERROR';
+        btn.disabled = false;
+      }
+    }
+
+    // ── Init ──
+    updatePreview();
+  </script>
+
+  <!-- Load ethers.js v6 from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+</body>
+
+</html>
