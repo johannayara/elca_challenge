@@ -5,8 +5,6 @@ This is an attempt at solving the ELCA EDI Challenge. This application mints bad
 ## Link to project
 https://johannayara.github.io/elca_challenge/index.html
 ## Project structure
-
-## Setup
 ``` 
 .
 ├── contracts/
@@ -21,6 +19,7 @@ https://johannayara.github.io/elca_challenge/index.html
 │   ├── Badge.js
 └── └── Box.js
 ```
+## Setup
 ### Clone Repository
 
 #### Via HTTPS:
