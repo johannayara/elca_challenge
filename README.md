@@ -1,7 +1,7 @@
 # OSS-fuzz libpng project
 
 ## Project Description
-This is an attempt at solving the ELCA EDI Challenge. This application mints badges on the Polygon Amoy testnet. Please note that I was unable to fully test the whole pipeline as I was unable to get access to testnet tokens. Therefore I was not able to complete the challenge and send my nft badge to the examiner's wallet.
+This is my submission for the ELCA EDI Challenge. The application mints badges on the Polygon Amoy testnet. I could not fully test the pipeline because I was unable to access testnet tokens, therefore I did not complete the challenge by sending an NFT badge to the examiner’s wallet.
 ## Link to project
 https://johannayara.github.io/elca_challenge/index.html
 ## Project structure
