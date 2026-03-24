@@ -881,7 +881,7 @@
         const CONTRACT_ADDRESS = '0x0Ea3BD9f9907798CE6C5886232A6C862152F2f3e';
 
         const ABI = [
-          'function mintBadge(address recipient, string memory tokenURI) public returns (uint256)'
+          'function safeMint(address recipient, string memory tokenURI) public returns (uint256)'
         ];
 
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
