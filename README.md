@@ -3,7 +3,7 @@
 ## Project Description
 This is my submission for the ELCA EDI Challenge. The application mints badges on the Polygon Amoy testnet.
 ## Link to project
-https://johannayara.github.io/elca_challenge/index.html
+https://johannayara.github.io/elca_challenge
 ## Project structure
 ``` 
 .
