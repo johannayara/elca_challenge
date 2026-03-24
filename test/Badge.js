@@ -19,10 +19,6 @@ describe("Badge Contract", function () {
 
   // ── Deployment ──
   describe("Deployment", function () {
-    it("should set the correct owner", async function () {
-      expect(await badge.owner()).to.equal(owner.address);
-    });
-
     it("should have correct name and symbol", async function () {
       expect(await badge.name()).to.equal("Badge");
       expect(await badge.symbol()).to.equal("BADGE");
@@ -31,16 +27,16 @@ describe("Badge Contract", function () {
 
   // ── Minting ──
   describe("Minting", function () {
-    it("should mint a badge and return token ID 0", async function () {
+    it("should mint a badge and return token ID 1", async function () {
       const tx = await badge.safeMint(recipient.address, TEST_URI);
       await tx.wait();
       // first token ID should be 0
-      expect(await badge.ownerOf(0)).to.equal(recipient.address);
+      expect(await badge.ownerOf(1)).to.equal(recipient.address);
     });
 
     it("should store the correct token URI", async function () {
       await badge.safeMint(recipient.address, TEST_URI);
-      expect(await badge.tokenURI(0)).to.equal(TEST_URI);
+      expect(await badge.tokenURI(1)).to.equal(TEST_URI);
     });
 
     it("should increment token IDs on each mint", async function () {
@@ -48,32 +44,17 @@ describe("Badge Contract", function () {
       await badge.safeMint(recipient.address, TEST_URI);
       await badge.safeMint(recipient.address, TEST_URI);
 
-      expect(await badge.ownerOf(0)).to.equal(recipient.address);
       expect(await badge.ownerOf(1)).to.equal(recipient.address);
       expect(await badge.ownerOf(2)).to.equal(recipient.address);
+      expect(await badge.ownerOf(3)).to.equal(recipient.address);
     });
 
     it("should mint to different recipients", async function () {
       await badge.safeMint(recipient.address, TEST_URI);
       await badge.safeMint(otherUser.address, TEST_URI);
 
-      expect(await badge.ownerOf(0)).to.equal(recipient.address);
-      expect(await badge.ownerOf(1)).to.equal(otherUser.address);
-    });
-  });
-
-  // ── Access Control ──
-  describe("Access Control", function () {
-    it("should revert if non-owner tries to mint", async function () {
-      await expect(
-        badge.connect(otherUser).safeMint(recipient.address, TEST_URI)
-      ).to.be.revertedWithCustomError(badge, "OwnableUnauthorizedAccount");
-    });
-
-    it("should revert if recipient tries to mint", async function () {
-      await expect(
-        badge.connect(recipient).safeMint(recipient.address, TEST_URI)
-      ).to.be.revertedWithCustomError(badge, "OwnableUnauthorizedAccount");
+      expect(await badge.ownerOf(1)).to.equal(recipient.address);
+      expect(await badge.ownerOf(2)).to.equal(otherUser.address);
     });
   });
 

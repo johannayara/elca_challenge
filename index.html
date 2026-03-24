@@ -878,8 +878,7 @@
         const metaURI = 'data:application/json;base64,' +
           btoa(unescape(encodeURIComponent(JSON.stringify(metadata))));
 
-        //Dummy address as contract was not able to be deployed
-        const CONTRACT_ADDRESS = '0x92abcF9EAef79436f03fD43d7Ca2950A448cdC73';
+        const CONTRACT_ADDRESS = '0x0Ea3BD9f9907798CE6C5886232A6C862152F2f3e';
 
         const ABI = [
           'function mintBadge(address recipient, string memory tokenURI) public returns (uint256)'
@@ -888,16 +887,41 @@
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
         setStatus('Sending transaction... (confirm in MetaMask)', 'loading');
+        setStatus('Estimating gas...', 'loading');
+        const gasEstimate = await contract.safeMint.estimateGas(recipient, metaURI);
+        const feeData = await provider.getFeeData();
+        const maxFeePerGas = feeData.maxFeePerGas;
+        const estimatedCost = gasEstimate * maxFeePerGas;
 
-        const tx = await contract.mintBadge(recipient, metaURI);
+        const costInPOL = ethers.formatEther(estimatedCost);
+        const confirmDeploy = confirm(
+          `Estimated cost: ${parseFloat(costInPOL).toFixed(6)} POL\n\nProceed with mint?`
+        );
+
+        if (!confirmDeploy) {
+          setStatus('Transaction cancelled');
+          btn.disabled = false;
+          return;
+        }
+
+
+
+        const tx = await contract.safeMint(recipient, metaURI);
         setStatus(`Tx sent: ${tx.hash.slice(0, 18)}... waiting for confirmation`, 'loading');
 
         const receipt = await tx.wait();
-        const tokenId = receipt.logs[0]?.topics?.[3]
-          ? parseInt(receipt.logs[0].topics[3], 16)
-          : '?';
+        let tokenId = '?';
 
-        setStatus(`✔ Minted! Token ID: ${tokenId} — Tx: ${tx.hash.slice(0, 14)}...`);
+        for (const log of receipt.logs) {
+          try {
+            const parsed = contract.interface.parseLog(log);
+            if (parsed.name === 'Transfer') {
+              tokenId = parsed.args.tokenId.toString();
+              break;
+            }
+          } catch {}
+        }
+        setStatus(`Minted! Token ID: ${tokenId} — Tx: ${tx.hash.slice(0, 14)}...`);
         document.getElementById('mintedStamp').classList.add('show');
         document.getElementById('footerStatus').textContent = 'MINTED';
         document.getElementById('statusDot').classList.add('minted');
