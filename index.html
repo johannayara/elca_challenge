@@ -667,6 +667,7 @@
       </div>
       <span class="wallet-addr" id="walletDisplay">Not connected</span>
       <span class="pol-bal" id="polDisplay">— POL</span>
+      <button class="net-btn" id="connectWalletBtn" onclick="connectWallet()">Connect Wallet</button>
     </div>
   </header>
 
@@ -823,6 +824,35 @@
       document.getElementById('walletDisplay').textContent = address.slice(0, 6) + '...' + address.slice(-4);
       document.getElementById('polDisplay').textContent = `${formatted} POL`;
     }
+    //Connect wallet
+    let provider;
+    let signer;
+    let userAddress;
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert('MetaMask not detected! Please install it.');
+        return;
+      }
+
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        // Update header
+        await updateHeader(provider, userAddress);
+
+        // Disable connect button once connected
+        const btn = document.getElementById('connectWalletBtn');
+        btn.textContent = 'Connected';
+        btn.disabled = true;
+      } catch (err) {
+        console.error(err);
+        alert('Failed to connect wallet');
+      }
+    }
+
     // Mint Badge function
     async function mintBadge() {
       const btn = document.getElementById('mintBtn');
@@ -835,24 +865,17 @@
         setStatus('Fill in at least: first name, last name, recipient wallet.', 'error');
         return;
       }
+       if (!signer) {
+        setStatus('Please connect your wallet first.', 'error');
+        return;
+      }
+
 
       btn.disabled = true;
-      setStatus('Connecting to wallet...', 'loading');
+      setStatus('Preparing transaction...', 'loading');
       document.getElementById('footerStatus').textContent = 'MINTING';
 
       try {
-        // Connect MetaMask
-        if (!window.ethereum) {
-          setStatus('MetaMask not detected. Please install it.', 'error');
-          return;
-        }
-
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        await updateHeader(provider, address);
         // Check network
         const network = await provider.getNetwork();
         if (network.chainId !== 80002n) {//n suffix cause it's a big int
@@ -934,6 +957,7 @@
         btn.disabled = false;
       }
     }
+
 
     // Call update preview
     updatePreview();
