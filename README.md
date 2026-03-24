@@ -1,4 +1,4 @@
-# OSS-fuzz libpng project
+# Elca EDI challenge
 
 ## Project Description
 This is my submission for the ELCA EDI Challenge. The application mints badges on the Polygon Amoy testnet.
